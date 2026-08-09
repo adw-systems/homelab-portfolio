@@ -18,7 +18,6 @@ bash
 sudo apt update && sudo apt install fail2ban -y
 ```
 
-Use code with caution.
 
 ---
 
@@ -41,8 +40,6 @@ findtime = 600
 bantime = 3600
 ```
 
-Use code with caution.
-
 ### Regular Expression Regex Mapping (`/etc/fail2ban/filter.d/proxmox.conf`)
 
 Define the exact cryptographic text string signature matching an invalid Web UI authentication failure event [result_cite]: 
@@ -55,7 +52,6 @@ failregex = pvedaemon\[.*\]: authentication failure; rhost=<HOST> user=.* msg=.*
 ignoreregex =
 ```
 
-Use code with caution.
 
 ---
 
@@ -74,4 +70,3 @@ sudo systemctl restart fail2ban
 sudo fail2ban-client status proxmox
 ```
 
-Use code with caution.
