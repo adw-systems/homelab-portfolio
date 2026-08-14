@@ -44,3 +44,4 @@ The physical management console interfaces utilize static network binding profil
 - **Secure Administration GUI Access URI:** `https://10.0.0.10:8006/` 
     
 - **Local Management Network Mask Target:** Subnet Scope `/24` (Netmask: `255.255.255.0`)
+
