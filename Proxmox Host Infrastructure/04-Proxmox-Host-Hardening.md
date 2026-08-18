@@ -1,119 +1,149 @@
 ### Proxmox VE Hypervisor Host Hardening Runbook
 
-This runbook documents the security configurations applied directly to the bare-metal hypervisor host layer to protect administrative tracking interfaces and enforce least-privilege principles. 
+This runbook documents the security configurations applied directly to the bare-metal hypervisor host layer to protect administrative tracking interfaces, eliminate password-based vectors, and enforce strict network isolation. 
 
 ---
 
 ### 1. Identity & Access Management (IAM) Isolation
 
-To align with enterprise security baselines, daily administrative and operational actions are decoupled from the root user via Linux Pluggable Authentication Modules (PAM) and Proxmox Access Control Lists (ACLs). 
+To align with enterprise security baselines, daily administrative actions are decoupled from the root user via Linux Pluggable Authentication Modules (PAM) and Proxmox Access Control Lists (ACLs). 
 
 ### Linux Account Provisioning & Privilege Elevation
 
-1. Initialize a new administrative operations user profile within the underlying Debian host environment using a sanitized generic identity: 
+1. Initialize a new administrative operations user profile within the underlying Debian host environment. Replace `<username>` with your chosen non-generic identifier:
     
-    bash
+```
+su -
+adduser <username>
+```
     
-    ```
-    adduser sysadmin
-    ```
+2. Install the missing `sudo` management utility framework:
     
-    Use code with caution.
+```
+apt update && apt install sudo -y
+```
     
-2. Append the account string to the local `sudo` infrastructure array to authorize root elevation rights: 
+3. Append the new account string to the local `sudo` system group to authorize root elevation rights:
     
-    bash
-    
-    ```
-    usermod -aG sudo sysadmin
-    ```
+```
+usermod -aG sudo <username>
+```
    
 
 ### Proxmox System RBAC Mapping
 
-Register the underlying PAM identity profile inside the hypervisor application realm and enforce global Administrator directory inheritance rules using the core user management engine: 
-
-bash
+Register the underlying PAM identity profile inside the hypervisor application realm and enforce global Administrator directory inheritance rules using the core user management engine:
 
 ```
 # Add user string into the Linux PAM authentication realm
-pveum user add sysadmin@pam
+pveum user add <username>@pam
 
 # Map the global administrative role across the system directory root (/)
-pveum acl modify / --roles Administrator --user sysadmin@pam
+pveum acl modify / --roles Administrator --user <username>@pam
 ```
 
 
 ---
 
-### 2. Secure Shell (SSH) Boundary Protection
+### 2. Cryptographic-Only SSH Boundary Protection
 
-Because administrative traffic is securely tunneled internally through a private Tailscale overlay network, direct public or internal root SSH access points are blocked. Additionally, empty or null password strings are explicitly denied to reject unauthenticated access requests. 
+Administrative access to the host terminal requires modern, un-breakable cryptographic key pairs. Password authentication and root logins are completely disabled.
 
 ### Configuration Adjustment Matrix
 
-1. Open the host SSH endpoint configurations descriptor: 
+1. Generate a secure modern key pair inside your local client machine's shell environment (e.g., Windows PowerShell or macOS Terminal):
     
-    bash
+```
+ssh-keygen -t ed25519 -C "admin-client-key"
+```
     
-    ```
-    sudo nano /etc/ssh/sshd_config
-    ```
+2. Push the public key payload (`id_ed25519.pub`) onto a single line inside the newly provisioned host user directory profile:
     
-    Use code with caution.
+```
+# Run these commands as your newly created user profile
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+nano ~/.ssh/authorized_keys
+# Paste your public key string inside the file, save and close.
+chmod 600 ~/.ssh/authorized_keys
+```
     
-2. Set the following baseline tracking parameters to force user separation and password validation: 
+3. Open the host SSH endpoint configuration descriptor:
     
-    text
+```
+sudo nano /etc/ssh/sshd_config
+```
     
-    ```
-    # Deny direct root administrative sessions over SSH
-    PermitRootLogin no
+4. Enforce user separation and drop password authentication fallbacks by applying these parameters:
     
-    # Explicitly reject connection requests from accounts with empty or null passwords
-    PermitEmptyPasswords no
-    ```
+```
+# Deny direct root administrative sessions over SSH
+PermitRootLogin no
+
+# Force strict cryptographic key verification
+PubkeyAuthentication yes
+
+# Explicitly reject password-based login attempts across the daemon
+PasswordAuthentication no
+PermitEmptyPasswords no
+```
     
-    Use code with caution.
+5. **CRITICAL SAFETY STEP:** Open a separate backup terminal window before committing changes. If a syntax mistake is made, your active session remains connected to fix it. Restart the networking daemon:
     
-3. Commit and apply structural security changes to the host networking daemon: 
-    
-    bash
-    
-    ```
-    sudo systemctl restart sshd
-    ```
-    
+```
+sudo systemctl restart sshd
+```
     
     
 
 ---
 
-### 3. Brute-Force Mitigation & Account Lockout Policies
+### 3. Network Isolation & Tailscale Overlay Mesh
 
-To prevent automated credential-guessing vectors from exploiting open terminal pathways, the Linux Pluggable Authentication Module (PAM) subsystem is configured with a strict threshold lockout engine via `pam_faillock`. 
+To prevent exposure to public interfaces or compromised entities on the local area network (LAN), the Proxmox Web UI and SSH engines are tightly bound to an encrypted Tailscale overlay interface.
 
-### Operational Parameters
+### Tailscale Deployment
 
-- **Max Retry Threshold (`deny`):** 5 failed authentication attempts. 
+1. Initialize the official Tailscale automated deployment architecture script directly onto the host terminal:
     
-- **Lockout Window (`unlock_time`):** 1800 seconds (30 minutes) cooling-off period. 
+```
+sudo curl -fsSL https://tailscale.com/install.sh | sh
+```
     
-
-### Subsystem Implementation Rules
-
-The parameters are injected directly into the core PAM authentication layers to audit and intercept bad login payloads: 
-
-text
-
+2. Connect and authenticate the bare-metal node into your private Tailnet mesh network:
+    
 ```
-# Configuration added to /etc/pam.d/common-auth
-auth required pam_faillock.so preauth silent audit deny=5 unlock_time=1800
-auth [default=die] pam_faillock.so authfail audit deny=5 unlock_time=1800
-
-# Configuration added to /etc/pam.d/common-account
-account required pam_faillock.so
+sudo tailscale up
 ```
-
+    
 
 ---
+
+### 4. Hypervisor Maintenance & Infrastructure Hardening
+
+### Repository Correction (No-Subscription Streams)
+
+Switch default enterprise licencing pathways to the stable community open-source definitions to maintain regular package updates:
+
+```
+# Disable the enterprise list file tracking hooks
+sudo sed -i 's/^deb/#deb/' /etc/apt/sources.list.d/pve-enterprise.list
+
+# Append the stable non-production open source repository mirror
+echo "deb http://proxmox.com bookworm pve-no-subscription" | sudo tee /etc/apt/sources.list.d/pve-no-subscription.list
+```
+
+### Unattended Security Upgrades
+
+Automate the background deployment of critical Linux operating system security patches:
+
+```
+sudo apt install unattended-upgrades unattended-upgrades-blacklist -y
+sudo dpkg-reconfigure --priority=low unattended-upgrades
+```
+
+### Management Panel Verification Layer
+
+1. Access your Proxmox Web GUI over your secure Tailscale IP (`https://100.x.y.z:8006`).
+2. Navigate to **Datacenter** > **Two-Factor Authentication**.
+3. Select **Add** and enforce a strict **TOTP** (Time-Based One-Time Password) challenge requirement across your administrative profile.
