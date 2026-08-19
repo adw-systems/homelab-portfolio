@@ -46,11 +46,15 @@ text
 
 ```
 [Service]
+# Lock ollama to listen only to its local container
+Environment="OLLAMA_HOST=127.0.0.1
+
 # Lock execution mapping exactly to the host machine's 6 physical compute cores
 Environment="OLLAMA_NUM_THREADS=6"
 
 # Constrain memory overhead to a single active text generation stream
 Environment="OLLAMA_NUM_PARALLEL=1"
+
 ```
 
 Use code with caution.
