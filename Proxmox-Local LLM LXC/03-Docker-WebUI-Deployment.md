@@ -32,12 +32,13 @@ Inject the official, stable distribution pathway architecture mapping directly t
 bash
 
 ```
+# Add the repository to Apt sources:
 sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
 Types: deb
 URIs: https://download.docker.com/linux/ubuntu
-Suites: \$(. /etc/os-release && echo "\${UBUNTU_CODENAME:-\$VERSION_CODENAME}")
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
 Components: stable
-Architectures: \$(dpkg --print-architecture)
+Architectures: $(dpkg --print-architecture)
 Signed-By: /etc/apt/keyrings/docker.asc
 EOF
 
@@ -62,21 +63,11 @@ Use code with caution.
 
 ### 2. Containerized Application Orchestration & Ingress Bridging
 
-### Socket Permission Elevation
-
-To manage active tasks securely over network boundaries without maintaining direct root terminal shell states, the administrative profile is assigned explicitly to the container runtime socket tracking arrays: 
-
-bash
-
-```
-sudo usermod -aG docker sysadmin
-```
-
-Use code with caution.
+The application stack uses low-latency host networking overlays to bridge communication paths cleanly straight to the underlying native engine logic backend processing on loopback port `11434`. 
 
 ### Infrastructure Deployment Pipeline
 
-The application stack uses low-latency host networking overlays to bridge communication paths cleanly straight to the underlying native engine logic backend processing on port `11434`: 
+Run the deployment command directly from the container terminal to retrieve the stable frontend production assets and launch the service stack: 
 
 bash
 
@@ -93,8 +84,24 @@ Use code with caution.
 
 ### Architectural Parameter Definitions
 
-- `--network=host`: Directs the application to map straight into the primary network stack, resolving inner loopback connectivity requirements to port `11434`. 
+- `--network=host`: Directs the application to map straight into the primary network stack, resolving inner loopback connectivity requirements to the local Ollama instance on port `11434`. 
     
 - `-v open-webui:/app/backend/data`: Binds an isolated volume checkpoint directory to ensure internal user profiles and chat history states persist across service reboots. 
     
-- `--restart always`: Enforces container execution state restoration policies if the hosting hypervisor experiences hard restarts or service drops.
+- `--restart always`: Enforces container execution state restoration policies if the hosting hypervisor experiences hard restarts or service drops. 
+    
+
+### Runtime State Validation
+
+To verify that the enterprise frontend container is correctly initialized and listening on the host network interfaces, audit the active runtime engine state: 
+
+bash
+
+```
+sudo docker ps
+```
+
+Use code with caution.
+
+**Expected Telemetry Verification:**  
+Confirm the `open-webui` entry displays a status signature of `Up` along with its initialization uptime track (e.g., `Up 2 minutes`).

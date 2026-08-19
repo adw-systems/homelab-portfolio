@@ -8,39 +8,7 @@ Upon completing the initial container deployment, the web interface layout trigg
 
 The core application service configuration file was re-adjusted directly from the system container terminal: 
 
-1. Opened the system override descriptor via the daemon manager layout utility: 
-    
-    bash
-    
-    ```
-    sudo systemctl edit ollama
-    ```
-    
-    Use code with caution.
-    
-2. Applied an explicit universal socket interface binding rule within the active configuration blocks: 
-    
-    text
-    
-    ```
-    [Service]
-    Environment="OLLAMA_HOST=0.0.0.0"
-    ```
-    
-    Use code with caution.
-    
-3. Executed a complete state reload and restarted the underlying service framework: 
-    
-    bash
-    
-    ```
-    sudo systemctl daemon-reload
-    sudo systemctl restart ollama
-    ```
-    
-    Use code with caution.
-    
-4. Remapped the interface administration link panel to point directly to the system loopback address: 
+1. Remapped the interface administration link panel to point directly to the system loopback address: 
     
     text
     
