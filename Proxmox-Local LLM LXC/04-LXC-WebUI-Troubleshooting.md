@@ -1,4 +1,4 @@
-### 4. Incident: Open WebUI API Disconnect (Socket Bind Restrictions)
+### Incident: Open WebUI API Disconnect (Socket Bind Restrictions)
 
 ### Diagnostic Analysis
 
